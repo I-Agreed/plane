@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<canvas id="c">
+<script type="text/javascript">
+
+var keys = [];
+keys["up"] = false
+keys["left"] = false
+keys["down"] = false
+keys["right"] = false
+
+var height = 1000;
+var width = 1000;
+
+var p_x = 0;
+var p_y = 0;
+var p_w = 100;
+var p_h = 100;
+var p_xv = 0;
+var p_yv = 0;
+var p_a = 35;
+var vel = 2;
+var resist = 0.95
+var maxVel = 5
+
+var sprites = [];
+sprites["player"] = new Image();
+sprites["player"].src = "plane.png";
+
+var ctx = document.getElementById("c").getContext("2d");
+ctx.canvas.width = width;
+ctx.canvas.height = height;
+
+var TO_RADIANS = Math.PI/180; 
+
+function floorTo(num,dec) {
+	pow = 10**dec
+	if (Number.isInteger(num)) {
+		num *= pow
+		num = Math.floor(num)
+		if (num < 0) {
+				num += 1
+		}
+		num /= pow
+	}
+}
+
+function drawRotatedImage(image, x, y, angle, Width, Height) { 
+	var canvas  = document.getElementById("c");
+    var context = canvas.getContext("2d");
+	imgWidth = image.width;
+	imgHeight = image.height;
+	
+	image.width = Width
+	image.height = Height
+    // save the current co-ordinate system 
+    // before we screw with it
+    context.save(); 
+
+    // move to the middle of where we want to draw our image
+    context.translate(x+Width/2, y+Width/2);
+
+    // rotate around that point, converting our 
+    // angle from degrees to radians 
+    context.rotate(angle * TO_RADIANS);
+
+    // draw it up and to the left by half the width
+    // and height of the image 
+    context.drawImage(image,0-Width/2,0-Height/2,Width,Height);
+
+    // and restore the co-ords to how they were when we began
+    context.restore(); 
+	image.width = imgWidth;
+	image.height = imgHeight;
+}
+
+function press(k) {
+	switch (k.keyCode) {
+		case 37: keys["left"] = true; break;   // left
+		case 38: keys["up"] = true; break;     // up
+		case 39: keys["right"] = true; break;  // right
+		case 40: keys["down"] = true; break;   // down
+		default: {}
+	}
+	k.preventDefault();
+}
+
+function unPress(k) {
+	switch (k.keyCode) {
+		case 37: keys["left"] = false; break;  // left
+		case 38: keys["up"] = false; break;    // up
+		case 39: keys["right"] = false; break; // right
+		case 40: keys["down"] = false; break;  // down
+		default: {}
+	}
+	k.preventDefault();
+}
+
+document.addEventListener('keyup',unPress);
+document.addEventListener('keydown',press);
+
+function left() {
+	p_xv -= vel;
+	if (p_xv < -maxVel) {
+		p_xv = -maxVel;
+	}
+	if (Number.isInteger(p_xv) == false) {
+		p_xv = Math.floor(p_xv)
+		if (p_xv < 0) {
+			p_xv += 1
+		}
+	}
+}
+
+function right() {
+	p_xv += vel;
+	if (p_xv > maxVel) {
+		p_xv = maxVel;
+	}
+	p_xv = Math.floor(p_xv)
+}
+
+function up() {
+	p_yv -= vel;
+	if (p_yv < -maxVel) {
+		p_yv = -maxVel;
+	}
+	if (Number.isInteger(p_yv) == false) {
+		p_yv = Math.floor(p_yv)
+		if (p_yv < 0) {
+			p_yv += 1
+		}
+	}
+}
+
+function down() {
+
+	p_yv += vel;
+	if (p_yv > maxVel) {
+		p_yv = maxVel;
+	}
+	p_yv = Math.floor(p_yv)
+}
+
+
+function frame() {
+	var canvas  = document.getElementById("c");
+    var context = canvas.getContext("2d");
+	context.fillStyle = "#000000";
+	context.fillRect(0,0,width,height);
+	//context.fillStyle = "#ff0000"
+	//context.fillRect(p_x,p_y,p_w,p_h);
+	context.fillStyle = "#00ff00";
+	
+	drawRotatedImage(sprites["player"],p_x,p_y,p_a,p_w,p_h)
+	for (i in keys) {
+		if (keys[i]) {
+			switch (i) {
+				case "left":  left(); break;
+				case "right": right(); break;
+				case "up":    up(); break;
+				case "down":  down(); break;
+				default: {}
+			}
+		}
+	}
+	
+	p_a += p_xv
+	
+	x = (Math.sin(p_a*TO_RADIANS)*p_yv)
+	y = (Math.cos(p_a*TO_RADIANS)*p_yv)
+	p_y += y
+	p_x -= x
+	
+	p_yv *= resist
+	p_xv *= resist
+
+	
+	floorTo(p_yv,2)
+	floorTo(p_xv,2)
+
+	
+	
+	if (p_x > width - p_w) {
+		p_x = width - p_w
+		p_xv = 0
+	}
+	if (p_y > height - p_h) {
+		p_y = height - p_w
+		p_yv = 0
+	}
+	
+	if (p_x < 0) {
+		p_x = 0
+		p_xv = 0
+	}
+	if (p_y < 0) {
+		p_y = 0
+		p_yv = 0
+	
+	}
+	
+	
+}
+
+frame()
+setInterval(frame, 10);
+</script>
+</html>
